@@ -44,6 +44,7 @@ import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.logic.ProcessingLogic;
 import gregtech.api.metatileentity.implementations.MTEExtendedPowerMultiBlockBase;
+import gregtech.api.metatileentity.implementations.MTEHatchEnergy;
 import gregtech.api.metatileentity.implementations.MTEHatchInput;
 import gregtech.api.metatileentity.implementations.MTEHatchInputBus;
 import gregtech.api.recipe.RecipeMap;
@@ -248,7 +249,7 @@ public class MTEMultiSolidifier extends MTEExtendedPowerMultiBlockBase<MTEMultiS
         int built = survivialBuildPiece(STRUCTURE_PIECE_MAIN, stackSize, 3, 4, 0, elementBudget, env, false, true);
         if (built >= 0) return built;
         int tTotalWidth = Math.min(stackSize.stackSize + 1, 6);
-        for (int i = 1; i < tTotalWidth - 1; i++) {
+        for (int i = 1; i < tTotalWidth; i++) {
             mWidth = i;
             nWidth = i;
             built = survivialBuildPiece(MS_LEFT_MID, stackSize, 3 + 2 * i, 4, 0, elementBudget, env, false, true);
@@ -256,26 +257,29 @@ public class MTEMultiSolidifier extends MTEExtendedPowerMultiBlockBase<MTEMultiS
             built = survivialBuildPiece(MS_RIGHT_MID, stackSize, -2 - 2 * i, 4, 0, elementBudget, env, false, true);
             if (built >= 0) return built;
         }
-        if (mWidth == tTotalWidth - 2) return survivialBuildPiece(
-            MS_END,
-            stackSize,
-            (2 + tTotalWidth) * 2 - 4,
-            4,
-            0,
-            elementBudget,
-            env,
-            false,
-            true);
-        else return survivialBuildPiece(
-            MS_END,
-            stackSize,
-            (-2 - tTotalWidth) * 2 + 4,
-            4,
-            0,
-            elementBudget,
-            env,
-            false,
-            true);
+        if (mWidth == tTotalWidth - 1) {
+            built += survivialBuildPiece(
+                MS_END,
+                stackSize,
+                (3 + tTotalWidth) * 2 - 4,
+                4,
+                0,
+                elementBudget,
+                env,
+                false,
+                true);
+            built += survivialBuildPiece(
+                MS_END,
+                stackSize,
+                (-3 - tTotalWidth) * 2 + 4,
+                4,
+                0,
+                elementBudget,
+                env,
+                false,
+                true);
+        }
+        return built;
     }
 
     @Override
@@ -307,8 +311,11 @@ public class MTEMultiSolidifier extends MTEExtendedPowerMultiBlockBase<MTEMultiS
             return false;
         }
         if (glassTier >= VoltageIndex.UMV) return true;
-        for (int i = 0; i < this.mEnergyHatches.size(); ++i)
-            if (this.mEnergyHatches.get(i).mTier > glassTier) return false;
+        for (MTEHatchEnergy mEnergyHatch : this.mEnergyHatches) {
+            if (mEnergyHatch.mTier > glassTier) {
+                return false;
+            }
+        }
 
         return mCasingAmount >= (100 + mWidth * 23);
     }
